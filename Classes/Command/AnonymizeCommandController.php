@@ -31,17 +31,34 @@ class AnonymizeCommandController extends CommandController
 
     /**
      * Anonymize all entities that exceed their maximum age
+     * @param string $className The name of a class to anonymize entities of
+     * @throws \Aerticket\DataAnonymizer\AnonymizationException
+     * @throws \Neos\Flow\Persistence\Exception\InvalidQueryException
      */
-    public function runCommand()
+    public function runCommand($className = null)
     {
         $this->outputLine('Anonymizing all entities that exceed their maximum age. Please see log for details.');
-        $classNames = $this->anonymizationService->getAnonymizableClassNames();
+        if ($className === null) {
+            $classNames = $this->anonymizationService->getAnonymizableClassNames();
 
-        foreach ($classNames as $className) {
-            $this->outputLine('Processing entities of type "%s"...', [$className]);
-            $this->anonymizationService->anonymize($className);
+            foreach ($classNames as $singleClassName) {
+                $this->executeForClassName($singleClassName);
+            }
+        } else {
+            $this->executeForClassName($className);
         }
 
         $this->outputLine('Done.');
+    }
+
+    /**
+     * @param string $className
+     * @throws \Aerticket\DataAnonymizer\AnonymizationException
+     * @throws \Neos\Flow\Persistence\Exception\InvalidQueryException
+     */
+    protected function executeForClassName($className)
+    {
+        $this->outputLine('Processing entities of type "%s"...', [$className]);
+        $this->anonymizationService->anonymize($className);
     }
 }
